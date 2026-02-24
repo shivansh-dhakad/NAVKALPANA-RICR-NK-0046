@@ -198,6 +198,14 @@ def predict():
         print("Running stack prediction...")
         stack_prob = float(stack.predict_proba(input)[0][1]) * 100
 
+        def shrink_towards_mid(x, factor=0.9):
+            return 50 + factor * (x - 50)
+
+        xgb_prob = shrink_towards_mid(xgb_prob)
+        lgbm_prob = shrink_towards_mid(lgbm_prob)
+        tabnet_prob = shrink_towards_mid(tabnet_prob)
+        stack_prob = shrink_towards_mid(stack_prob)
+        
         final_risk = round((xgb_prob + lgbm_prob + tabnet_prob + stack_prob) / 4,2)
 
         if final_risk < 30:
@@ -206,6 +214,7 @@ def predict():
             category = "Moderate Risk"
         else:
             category = "High Risk"
+            
         return jsonify({
             "final_risk": final_risk,
             "category": category,
@@ -306,6 +315,14 @@ def bulk_predict():
         df["tabnet"] = np.round(tabnet_prob, 2)
         df["stack"] = np.round(stack_prob, 2)
         # Final average (same logic as single)
+        # ===== Confidence Shrinkage Calibration =====
+        def shrink_towards_mid(x, factor=0.9):
+            return 50 + factor * (x - 50)
+
+        risk_cols = ["xgb", "lgbm", "tabnet", "stack"]
+
+        for col in risk_cols:
+            df[col] = df[col].apply(lambda x: round(shrink_towards_mid(x), 2))
         df["final_risk"] = np.round(
             (df["xgb"] + df["lgbm"] + df["tabnet"] + df["stack"]) / 4,
             2
