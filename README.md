@@ -86,23 +86,27 @@ CardioShield AI aims to provide a proactive cardiovascular risk prediction syste
 }
 
 # Screenshots
-1) landing page (dark mode,light mode)
- <img width="2880" height="1800" alt="Screenshot 2026-02-24 234357" src="https://github.com/user-attachments/assets/0f80c052-e064-44ae-86b8-39b6b0f18a0b" />
-<img width="2880" height="1800" alt="Screenshot 2026-02-24 234413" src="https://github.com/user-attachments/assets/fe4c0367-7f5f-4695-85f2-1e3a07a854ad" />
+1) login page
+   <img width="1913" height="908" alt="login page" src="https://github.com/user-attachments/assets/1e1f539c-9fe3-45e4-adce-0e3fddf26239" />
+2) signup page
+   
+   
+4) individual-prediction (dark mode,light mode)
+<img width="1896" height="1074" alt="individual-light" src="https://github.com/user-attachments/assets/a29d20d5-5407-414a-99af-e9717609a111" />
+<img width="1896" height="1072" alt="individual-dark" src="https://github.com/user-attachments/assets/8b8bf9d2-4cc4-42c0-9a62-9bedab920af4" />
+<img width="1897" height="1078" alt="individual-summary-dark" src="https://github.com/user-attachments/assets/8c99159e-158c-497a-8cbe-5a3746dded48" />
 
-2) Risk prediction
-<img width="2880" height="1800" alt="Screenshot 2026-02-24 235251" src="https://github.com/user-attachments/assets/47d95775-dffc-4b10-b384-c112595fc6eb" />
 
-3) model summary
-<img width="2880" height="1800" alt="Screenshot 2026-02-24 235451" src="https://github.com/user-attachments/assets/72cacaef-249b-4471-8b27-438cc56de150" />
+4) bulk-prediction
+   <img width="1920" height="1080" alt="bulk-light" src="https://github.com/user-attachments/assets/c811e809-2b35-4589-9412-237a1ce53c0b" />
+   <img width="1920" height="1080" alt="bulk summary" src="https://github.com/user-attachments/assets/705d958b-ebc4-41e1-8980-1173542f943a" />
+
 
 # Future Improvements
 
 - Hospital API Integration
 
 - Wearable Device Data Integration
-
-- Mobile App Version
 
 - Cloud Deployment (AWS / Render / Azure)
 
