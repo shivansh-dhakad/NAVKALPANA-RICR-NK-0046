@@ -12,4 +12,5 @@ lightgbm
 gunicorn
 mysql-connector-python
 pymysql
+psycopg2-binary
 
