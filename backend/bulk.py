@@ -132,45 +132,6 @@ def generate_clinical_summary(user_row):
         
     return explanations
 
-import pymysql
-
-def save_bulk_to_db(df):
-    conn = pymysql.connect(
-        host=os.environ.get("DB_HOST"),
-        user=os.environ.get("DB_USER"),
-        password=os.environ.get("DB_PASSWORD"),
-        database=os.environ.get("DB_NAME"),
-        port=int(os.environ.get("DB_PORT", 3306))
-    )
-
-    try:
-        with conn.cursor() as cursor:
-            sql = """
-            INSERT INTO bulk_predictions
-            (id, age, height, weight, ap_hi, ap_lo, cholesterol, gluc, smoke, alco, bmi, pulse_pressure,
-             Bmi_cat, pulse_pressure_cat, age_bp_inter, gluc_bmi_inter, simple_risk_index, cardio)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-
-            for _, row in df.iterrows():
-                cardio = 1 if row["final_risk"] > 44 else 0
-
-                cursor.execute(sql, (
-                    row["id"],
-                    row["age"], row["height"], row["weight"],
-                    row["ap_hi"], row["ap_lo"],
-                    row["cholesterol"], row["gluc"],
-                    row["smoke"], row["alco"],
-                    row["Bmi"], row["pulse_pressure"],
-                    row["Bmi_cat"], row["pulse_pressure_cat"],
-                    row["age_bp_inter"], row["gluc_bmi_inter"],
-                    row["simple_risk_index"], cardio
-                ))
-
-            conn.commit()
-
-    finally:
-        conn.close()
 
 # ================= BULK PREDICTION ROUTE =================
 
@@ -324,7 +285,6 @@ def predict():
                 "Alcohol": row["alco"]
             }
         })
-        save_bulk_to_db(df)
 
         return jsonify({
             "total_records": len(predictions),
@@ -334,3 +294,4 @@ def predict():
     except Exception as e:
 
         return jsonify({"error": str(e)}), 400
+
