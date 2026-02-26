@@ -120,16 +120,20 @@ def generate_explanation(row):
     return f"The predicted cardiovascular risk is influenced by {main_text}, and {last_factor}."
 
 import pymysql
+import os
 
 def save_to_db(record, final_risk):
     conn = pymysql.connect(
-        host="localhost",
-        user="root",
-        password="Shivansh@1843",
-        database="HeartRiskDatabase"
+        host=os.environ.get("DB_HOST"),
+        user=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD"),
+        database=os.environ.get("DB_NAME"),
+        port=int(os.environ.get("DB_PORT", 3306)),
+        cursorclass=pymysql.cursors.DictCursor
     )
+
     try:
-        cardio = 1 if final_risk > 44 else 0  # cardio label
+        cardio = 1 if final_risk > 44 else 0
 
         with conn.cursor() as cursor:
             sql = """
@@ -141,13 +145,14 @@ def save_to_db(record, final_risk):
             cursor.execute(sql, (
                 record["age"], record["height"], record["weight"], record["ap_hi"], record["ap_lo"],
                 record["cholesterol"], record["gluc"], record["smoke"], record["alco"], record["Bmi"],
-                record["pulse_pressure"], record["Bmi_cat"], record["pulse_pressure_cat"], record["age_bp_inter"],
-                record["gluc_bmi_inter"], record["simple_risk_index"], cardio
+                record["pulse_pressure"], record["Bmi_cat"], record["pulse_pressure_cat"],
+                record["age_bp_inter"], record["gluc_bmi_inter"],
+                record["simple_risk_index"], cardio
             ))
             conn.commit()
+
     finally:
         conn.close()
-        
 # ================= SINGLE PREDICT ROUTE =================
 
 @individual_bp.route("/predict", methods=["POST"])
@@ -283,4 +288,5 @@ def predict():
         })
 
     except Exception as e:
+
         return jsonify({"error": str(e)}), 400
