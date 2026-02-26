@@ -11,4 +11,5 @@ xgboost
 lightgbm
 gunicorn
 mysql-connector-python
+pymysql
 
