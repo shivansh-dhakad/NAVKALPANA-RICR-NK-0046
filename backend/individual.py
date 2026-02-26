@@ -122,37 +122,7 @@ def generate_explanation(row):
 import pymysql
 import os
 
-def save_to_db(record, final_risk):
-    conn = pymysql.connect(
-        host=os.environ.get("DB_HOST"),
-        user=os.environ.get("DB_USER"),
-        password=os.environ.get("DB_PASSWORD"),
-        database=os.environ.get("DB_NAME"),
-        port=int(os.environ.get("DB_PORT", 3306)),
-        cursorclass=pymysql.cursors.DictCursor
-    )
 
-    try:
-        cardio = 1 if final_risk > 44 else 0
-
-        with conn.cursor() as cursor:
-            sql = """
-            INSERT INTO individual_predictions 
-            (age, height, weight, ap_hi, ap_lo, cholesterol, gluc, smoke, alco, bmi, pulse_pressure,
-             Bmi_cat, pulse_pressure_cat, age_bp_inter, gluc_bmi_inter, simple_risk_index, cardio)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            cursor.execute(sql, (
-                record["age"], record["height"], record["weight"], record["ap_hi"], record["ap_lo"],
-                record["cholesterol"], record["gluc"], record["smoke"], record["alco"], record["Bmi"],
-                record["pulse_pressure"], record["Bmi_cat"], record["pulse_pressure_cat"],
-                record["age_bp_inter"], record["gluc_bmi_inter"],
-                record["simple_risk_index"], cardio
-            ))
-            conn.commit()
-
-    finally:
-        conn.close()
 # ================= SINGLE PREDICT ROUTE =================
 
 @individual_bp.route("/predict", methods=["POST"])
@@ -259,26 +229,7 @@ def predict():
                 "feature": row["feature"],
                 "importance": float(row["importance"])
             })
-        record = {
-            "age": age,
-            "height": height,
-            "weight": weight,
-            "ap_hi": ap_hi,
-            "ap_lo": ap_lo,
-            "cholesterol": cholesterol,
-            "gluc": gluc,
-            "smoke": smoke,
-            "alco": alco,
-            "Bmi": bmi,
-            "pulse_pressure": pulse_pressure,
-            "Bmi_cat": df["Bmi_cat"].iloc[0],
-            "pulse_pressure_cat": df["pulse_pressure_cat"].iloc[0],
-            "age_bp_inter": df["age_bp_inter"].iloc[0],
-            "gluc_bmi_inter": df["gluc_bmi_inter"].iloc[0],
-            "simple_risk_index": df["simple_risk_index"].iloc[0]
-        }
-
-        save_to_db(record, final_risk)
+        
         return jsonify({
             "final_risk": final_risk,
             "category": category,
@@ -290,3 +241,4 @@ def predict():
     except Exception as e:
 
         return jsonify({"error": str(e)}), 400
+
