@@ -1,0 +1,811 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cardio Shield AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      :root {
+        --primary: #1e3a8a; /* Deep Medical Blue */
+        --secondary: #0ea5e9; /* Clinical Cyan */
+        --accent: #dc2626; /* Risk Red */
+        --success: #16a34a; /* Safe Green */
+        --warning: #f59e0b; /* Moderate Risk */
+
+        --bg: #f1f5f9; /* Soft clinical background */
+        --panel: rgba(255, 255, 255, 0.726);
+        --text: #0f172a;
+        --muted: #64748b;
+        --border: rgba(15, 23, 42, 0.08);
+      }
+
+      /* 🌙 DARK MODE */
+      [data-theme="dark"] {
+        --primary: #3b82f6;
+        --secondary: #06b6d4;
+        --accent: #ef4444;
+        --success: #22c55e;
+        --warning: #f59e0b;
+
+        --bg: #0f172a;
+        --panel: rgba(15, 23, 42, 0.757);
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --border: rgba(255, 255, 255, 0.08);
+      }
+
+      /* body */
+
+      body {
+        margin: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        color: var(--text);
+        background: url("{{ url_for('static', filename='light_theme.png') }}")
+          center/cover no-repeat fixed;
+        transition: all 0.4s ease;
+      }
+
+      html[data-theme="dark"] body {
+        background: url("{{ url_for('static', filename='dark_theme.png') }}")
+          center/cover no-repeat fixed;
+      }
+      /* header */
+
+      header {
+        padding: 1.8rem;
+        text-align: center;
+        position: relative;
+      }
+
+      header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      header p {
+        color: var(--muted);
+        margin-top: 0.4rem;
+      }
+
+      /* panel */
+
+      .panel {
+        background: var(--panel);
+        border-radius: 16px;
+        padding: 1.6rem;
+        border: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        max-height: max-content;
+      }
+
+      .panel:hover {
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        transform: translateY(-2px);
+      }
+      .summary-mode {
+        grid-template-columns: 1fr !important;
+      }
+
+      .summary-mode .container > .panel:last-child {
+        display: none; /* Hide Risk Panel */
+      }
+      /* theme toggle */
+      .theme-toggle {
+        position: absolute;
+        top: 1.2rem;
+        right: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .switch {
+        position: relative;
+        width: 46px;
+        height: 24px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        inset: 0;
+        background: #cbd5e1;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: 0.3s ease;
+      }
+
+      .slider:before {
+        content: "";
+        position: absolute;
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s ease;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+
+      /* When checked (Dark mode ON) */
+      .switch input:checked + .slider {
+        background: var(--primary);
+      }
+
+      .switch input:checked + .slider:before {
+        transform: translateX(22px);
+      }
+
+      /* Subtle glow in dark mode */
+      [data-theme="dark"] .switch input:checked + .slider {
+        box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+      }
+      /* layout  */
+      /* Container layout */
+      .container {
+        display: flex;
+        justify-content: center; /* center horizontally */
+        padding: 2rem;
+      }
+      .left-panel {
+        width: 100%;
+        max-width: 520px; /* adjust as you like */
+      }
+
+      /* tabs */
+      .tabs {
+        display: flex;
+        justify-content: space-between; /* spread buttons across full width */
+        gap: 0.5rem; /* optional small gap between buttons */
+      }
+
+      /* Buttons */
+      .tabs button {
+        flex: 1; /* each button takes equal width */
+        text-align: center; /* center the text inside button */
+        padding: 0.6rem 0; /* vertical padding only, horizontal handled by flex */
+        border: none;
+        cursor: pointer;
+        background: none;
+        font-weight: 600;
+        color: var(--muted);
+        transition: all 0.2s ease;
+      }
+
+      .tabs button.active {
+        color: var(--primary);
+        border-bottom: 3px solid var(--primary);
+      }
+
+      .tabs button:hover {
+        color: var(--primary);
+      }
+
+      /* form element */
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      label {
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        display: block;
+      }
+
+      input,
+      select {
+        width: 95%;
+        padding: 0.65rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        transition: 0.2s ease;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      }
+      select:hover,
+      input:hover {
+        width: 98%;
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      }
+      .grid-2x2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem 1.2rem;
+        margin-bottom: 1rem;
+      }
+
+      .grid-2x2 .form-group {
+        margin-bottom: 0;
+      }
+
+      .grid-2x2 select {
+        width: 95%;
+      }
+      .grid-2x2 select:hover {
+        width: 98%;
+      }
+      h3,
+      h4 {
+        text-align: center;
+      }
+      /* buttons */
+      .btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.4rem;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        margin: 0 auto;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(30, 58, 138, 0.25);
+        opacity: 0.95;
+      }
+      .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem; /* equal spacing */
+        margin-top: 1.2rem;
+      }
+
+      .button-group .btn {
+        min-width: 140px;
+      }
+      #clearBtn {
+        background: #64748b;
+      }
+
+      #clearBtn:hover {
+        background: #475569;
+      }
+
+      .risk-container {
+        width: 100%;
+        max-width: 400px;
+        margin: 20px auto;
+        padding: 0 10px; /* add padding so content doesn't touch edges */
+        box-sizing: border-box;
+      }
+
+      .risk-label {
+        font-size: 18px;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+
+      .risk-bar-bg {
+        position: relative;
+        height: 22px;
+        width: 100%;
+        border-radius: 999px;
+        background: linear-gradient(
+          to right,
+          #22c55e 0%,
+          #22c55e 30%,
+          #facc15 50%,
+          #ef4444 100%
+        );
+        overflow: hidden;
+        box-shadow:
+          inset 0 1px 4px rgba(0, 0, 0, 0.35),
+          0 0 8px rgba(255, 255, 255, 0.05);
+      }
+
+      .risk-fill {
+        position: absolute;
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(
+          to right,
+          rgba(255, 255, 255, 0.55),
+          rgba(255, 255, 255, 0.15)
+        );
+        transition: width 1.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: inset -3px 0 6px rgba(255, 255, 255, 0.35);
+      }
+      #risk-marker {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid black;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+        transition: left 1.2s ease;
+      }
+      .risk-text {
+        margin-top: 8px;
+        font-size: 22px;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .risk-category {
+        margin-top: 4px;
+        font-size: 30px;
+      }
+
+      /* model box */
+      .model-box {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(15, 23, 42, 0.04);
+        font-size: 1rem;
+        line-height: 1.6;
+        /* text-align: center; */
+      }
+
+      .chart-card {
+        margin-top: 1.5em;
+        background: rgba(15, 23, 42, 0.04);
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+      }
+
+      .chart-card canvas {
+        height: 180px !important;
+      }
+
+      .panel {
+        transition: all 0.5s ease;
+      }
+      #disclaimer {
+        text-align: center;
+        color: orangered;
+      }
+     #disclaimer p {
+        font-size: 8x;
+        margin: 0;
+      }
+      #disclaimer h3{
+        margin-bottom: 2px;
+      }
+      #logoutBtn{
+        background-color: #E53935;
+      }
+      #logoutBtn:hover{
+        background-color: #C62828;
+      }
+      /* Expand right panel fully */
+      /* Mobile responsive: stack panels vertically */
+      @media (max-width: 768px) {
+        .container {
+          margin: 0;
+          grid-template-columns: 100%; /* full width */
+          gap: 1rem; /* smaller gap for vertical spacing */
+          padding: 0;
+        }
+        .left-panel {
+          width: 80%; /* ensure full width */
+          margin: 0 auto;
+        }
+        .tabs button {
+          margin-left: 0; /* remove left margin */
+          margin-bottom: 0.5rem; /* optional: small spacing between buttons */
+          width: 100%; /* optional: make buttons narrower or fit nicely */
+        }
+
+        .tabs {
+          display: flex;
+          justify-content: space-around; /* spread tabs evenly */
+          flex-wrap: wrap; /* wrap if needed */
+        }
+
+        .risk-label {
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>Cardio Shield AI</h1>
+      <p>
+        AI-powered cardiovascular Risk Estimation and Clinical Decision Support
+        System
+      </p>
+      <div class="theme-toggle">
+        <label class="switch">
+          <input type="checkbox" id="themeSwitch" />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- LEFT PANEL -->
+
+      <div class="panel left-panel">
+        <div class="tabs">
+          <button class="active" onclick="showTab('single', this)">
+            Patient Details
+          </button>
+          <button onclick="showTab('summary', this)">Summary</button>
+          <!-- <button class="btn logout-btn" id="logoutBtn">Logout</button> -->
+        </div>
+        <hr />
+        <!-- SINGLE -->
+        <div id="single">
+          <div class="form-group">
+            <label>Age</label><input id="age" type="number" />
+          </div>
+          <div class="form-group">
+            <label>Gender</label>
+            <select id="gender">
+              <option value="">--</option>
+              <option value="1">Male</option>
+              <option value="2">Female</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Weight (kg)</label><input id="weight" type="number" />
+          </div>
+          <div class="form-group">
+            <label>Height (cm)</label><input id="height" type="number" />
+          </div>
+          <div class="form-group">
+            <label>Systolic BP</label><input id="ap_hi" type="number" />
+          </div>
+          <div class="form-group">
+            <label>Diastolic BP</label><input id="ap_lo" type="number" />
+          </div>
+          <div class="grid-2x2">
+            <div class="form-group">
+              <label>Cholesterol</label>
+              <select id="cholesterol">
+                <option value="">--</option>
+                <option value="1">Normal</option>
+                <option value="2">Above</option>
+                <option value="3">High</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Smoking</label>
+              <select id="smoke">
+                <option value="">--</option>
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Alcohol</label>
+              <select id="alco">
+                <option value="">--</option>
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Glucose</label>
+              <select id="gluc">
+                <option value="">--</option>
+                <option value="1">Normal</option>
+                <option value="2">Above</option>
+                <option value="3">High</option>
+              </select>
+            </div>
+          </div>
+          <hr />
+          <div class="button-group">
+            <button class="btn" id="clearBtn" onclick="clearForm()">
+              Clear
+            </button>
+            <button class="btn" id="predict" onclick="predict()">
+              Predict
+            </button>
+          </div>
+        </div>
+
+        <!-- SUMMARY -->
+        <div id="summary" style="display: none">
+          <h3>AI Explainability Dashboard</h3>
+
+          <div class="risk-container">
+            <div class="risk-label">Predicted Cardiovascular Risk</div>
+            <div class="risk-bar-bg">
+              <div id="risk-fill" class="risk-fill"></div>
+              <div id="risk-marker"></div>
+            </div>
+            <div id="risk-text" class="risk-text">0%</div>
+            <div id="risk-category" class="risk-category"></div>
+          </div>
+          <div class="model-box" id="explanationBox">
+            Explanation will appear here
+          </div>
+          <div class="model-box" id="suggestionBox">
+            Suggestion will appear here
+          </div>
+          <div class="chart-card">
+            <h4>Top Risk Driving Features</h4>
+            <canvas id="featureChart"></canvas>
+          </div>
+          <div style="text-align: center; margin-top: 20px">
+            <button class="btn primary-btn" onclick="downloadReport()">
+              Download Report
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="button-group">
+      <button class="btn logout-btn" id="logoutBtn">Logout</button>
+    </div>
+    <div id="disclaimer">
+      <h3>Disclaimer:</h3>
+      <p>
+        It is not a diagnostic device and does not replace professional medical
+        advice.
+      </p>
+    </div>
+
+    <script>
+      // Tab switching
+      let latestSinglePrediction = null;
+      let featureChartInstance = null;
+      // ---------------- TAB SWITCH ----------------
+      function showTab(tab, btn) {
+        document.getElementById("single").style.display = "none";
+        document.getElementById("summary").style.display = "none";
+        document.getElementById(tab).style.display = "block";
+
+        document
+          .querySelectorAll(".tabs button")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const container = document.querySelector(".container");
+
+        if (tab === "summary") {
+          container.classList.add("summary-mode");
+
+          if (!latestSinglePrediction) {
+            document.getElementById("clinicalSummaryText").innerHTML =
+              "<h3>Please run a prediction first.</h3>";
+            return;
+          }
+
+          loadFeatureSummary();
+        } else {
+          container.classList.remove("summary-mode");
+        }
+      }
+
+      // ---------------- DARK MODE ----------------
+      const themeSwitch = document.getElementById("themeSwitch");
+      if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.setAttribute("data-theme", "dark");
+        themeSwitch.checked = true;
+      }
+      themeSwitch.addEventListener("change", () => {
+        const t = themeSwitch.checked ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", t);
+        localStorage.setItem("theme", t);
+      });
+
+      // ---------------- CLEAR FORM ----------------
+      function clearForm() {
+        document.getElementById("age").value = "";
+        document.getElementById("gender").value = "";
+        document.getElementById("weight").value = "";
+        document.getElementById("height").value = "";
+        document.getElementById("ap_hi").value = "";
+        document.getElementById("ap_lo").value = "";
+        document.getElementById("cholesterol").value = "";
+        document.getElementById("smoke").value = "";
+        document.getElementById("alco").value = "";
+        document.getElementById("gluc").value = "";
+        document.getElementById("risk-inner").textContent = "--";
+        document.getElementById("risk-label").textContent = "Waiting...";
+        document.getElementById("modelPreds").innerHTML = "";
+        if (chart) chart.destroy();
+      }
+
+      // ---------------- PREDICT ----------------
+      async function predict() {
+        const data = {
+          age: Number(document.getElementById("age").value),
+          gender: Number(document.getElementById("gender").value),
+          weight: Number(document.getElementById("weight").value),
+          height: Number(document.getElementById("height").value),
+          ap_hi: Number(document.getElementById("ap_hi").value),
+          ap_lo: Number(document.getElementById("ap_lo").value),
+          cholesterol: Number(document.getElementById("cholesterol").value),
+          smoke: Number(document.getElementById("smoke").value),
+          alco: Number(document.getElementById("alco").value),
+          gluc: Number(document.getElementById("gluc").value),
+        };
+
+        for (let key in data) {
+          if (data[key] === 0 || data[key]) continue;
+          alert("Please fill all fields.");
+          return;
+        }
+
+        try {
+          const res = await fetch("/individual/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          });
+
+          if (!res.ok) {
+            const txt = await res.text();
+            alert("Backend error: " + txt);
+            return;
+          }
+
+          const r = await res.json();
+          console.log("Prediction response:", r);
+          latestSinglePrediction = r;
+          //   risk bar
+          const risk = Math.min(Math.max(Number(r.final_risk) || 0, 0), 100);
+          setRisk(risk);
+          // Show Explanation
+          let summary = latestSinglePrediction.reasons;
+
+          document.getElementById("explanationBox").innerHTML =
+            "<b>Clinical Explanation:</b><br>" + summary || "N/A";
+          document.getElementById("suggestionBox").innerHTML =
+            `<b>Personalized Health Suggestions:</b><br>${r.suggestions || "N/A"}`;
+
+          const summaryBtn = document.querySelectorAll(".tabs button")[1];
+          showTab("summary", summaryBtn);
+        } catch (err) {
+          alert("Connection error: " + err.message);
+        }
+      }
+      // ---------------- DOWNLOAD REPORT ----------------
+      function downloadReport() {
+        if (!latestSinglePrediction) {
+          alert("Please run prediction first.");
+          return;
+        }
+
+        const p = latestSinglePrediction;
+
+        const reportContent = `
+CARDIOVASCULAR RISK ASSESSMENT REPORT
+===================================
+
+RISK RESULT
+-----------
+Risk Probability : ${p.final_risk} %
+Risk Category    : ${p.category}
+
+CLINICAL INTERPRETATION
+----------------------
+${p.reasons}
+
+PERSONALIZED SUGGESTIONS
+-----------------------
+${p.suggestions}
+
+TOP RISK FEATURES
+-----------------
+${(p.top_features || []).map((f) => `- ${f.feature}: ${f.importance}`).join("\n")}
+
+Generated by Cardio Shield AI
+`;
+
+        const blob = new Blob([reportContent], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "Cardio_Risk_Report.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        URL.revokeObjectURL(url);
+      }
+
+      function loadFeatureSummary() {
+        if (!latestSinglePrediction) return;
+
+        const featureData = latestSinglePrediction.top_features || [];
+
+        if (featureData.length === 0) {
+          document.getElementById("clinicalSummaryText").innerHTML =
+            "<p>No explainability data available.</p>";
+          return;
+        }
+
+        const labels = featureData.map((f) => f.feature);
+        const values = featureData.map((f) => Math.abs(f.importance));
+
+        const ctx = document.getElementById("featureChart").getContext("2d");
+
+        if (featureChartInstance) featureChartInstance.destroy();
+
+        featureChartInstance = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Feature Impact",
+                data: values,
+                backgroundColor: "#3b82f6",
+              },
+            ],
+          },
+          options: {
+            indexAxis: "y",
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true } },
+          },
+        });
+      }
+      function setRisk(value) {
+        const fill = document.getElementById("risk-fill");
+        const text = document.getElementById("risk-text");
+        const category = document.getElementById("risk-category");
+        const marker = document.getElementById("risk-marker");
+
+        value = Math.max(0, Math.min(100, value));
+
+        fill.style.width = value + "%";
+        marker.style.left = value + "%";
+        text.innerText = value.toFixed(1) + "%";
+
+        if (value < 42) {
+          category.innerText = "Low Risk";
+          category.style.color = "#22c55e";
+        } else if (value < 65) {
+          category.innerText = "Moderate Risk";
+          category.style.color = "#facc15";
+        } else {
+          category.innerText = "High Risk";
+          category.style.color = "#ef4444";
+        }
+      }
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        // Optional: clear local storage/session
+        localStorage.clear();
+        // Redirect to login page
+        window.location.href = "{{ url_for('login') }}";
+      });
+    </script>
+  </body>
+</html>
