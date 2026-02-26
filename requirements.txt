@@ -9,6 +9,6 @@ joblib
 shap
 xgboost
 lightgbm
-torch
-pytorch-tabnet
 gunicorn
+re
+mysql-connector-python
