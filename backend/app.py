@@ -3,8 +3,8 @@ from flask_cors import CORS
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
-from individual import individual_bp
-from bulk import bulk_bp
+from backend.individual import individual_bp
+from backend.bulk import bulk_bp
 
 app = Flask(__name__, template_folder="../frontend/templates",
             static_folder="../frontend/static",
@@ -113,4 +113,5 @@ def signup():
 
     
 if __name__ == "__main__":
+
     app.run(host="0.0.0.0", port=5000, debug=True)
